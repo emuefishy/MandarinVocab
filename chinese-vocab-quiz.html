@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>汉字 · HSK Vocab Trainer</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink: #0f0e0c;
+  --paper: #f7f3ec;
+  --paper2: #efe9dd;
+  --red: #b5290e;
+  --red2: #d44025;
+  --gold: #b8860b;
+  --gold2: #e0a820;
+  --green: #1e6b3c;
+  --muted: #7a6d5a;
+  --border: rgba(15,14,12,0.13);
+  --shadow-sm: 0 2px 8px rgba(15,14,12,0.08);
+  --shadow-md: 0 6px 28px rgba(15,14,12,0.13);
+  --r: 12px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'JetBrains Mono', monospace;
+  min-height: 100vh;
+}
+
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0;
+  background:
+    radial-gradient(ellipse 70% 50% at 10% 20%, rgba(181,41,14,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 70% at 90% 80%, rgba(184,134,11,0.07) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.app { position: relative; z-index: 1; }
+
+/* ── HEADER ── */
+header {
+  position: sticky; top: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 28px;
+  background: rgba(247,243,236,0.9);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+}
+.logo { display: flex; align-items: baseline; gap: 10px; }
+.logo-hanzi { font-family: 'Noto Serif SC', serif; font-size: 26px; font-weight: 700; color: var(--red); }
+.logo-title { font-family: 'Crimson Pro', serif; font-size: 19px; font-weight: 300; font-style: italic; color: var(--muted); }
+
+.header-stats { display: flex; gap: 6px; }
+.hstat {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 5px 14px;
+  background: rgba(255,255,255,.5);
+  border: 1px solid var(--border); border-radius: 40px; gap: 1px;
+}
+.hstat-val { font-size: 16px; font-weight: 500; }
+.hstat-lbl { font-size: 8px; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }
+
+/* ── MAIN ── */
+main { max-width: 780px; margin: 0 auto; padding: 44px 22px 80px; }
+
+/* ── PANELS ── */
+.panel { display: none; }
+.panel.active { display: block; animation: fadeUp .3s ease; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── SETUP ── */
+.setup-hero { margin-bottom: 36px; }
+.setup-hero h1 {
+  font-family: 'Crimson Pro', serif;
+  font-size: clamp(34px, 6vw, 54px); font-weight: 300; line-height: 1.1; margin-bottom: 8px;
+}
+.setup-hero h1 em { font-style: italic; color: var(--red); font-family: 'Noto Serif SC', serif; }
+.setup-hero p { font-size: 11px; color: var(--muted); letter-spacing: .07em; }
+
+.file-notice {
+  padding: 14px 18px;
+  background: rgba(184,134,11,.08); border: 1px solid rgba(184,134,11,.25);
+  border-radius: var(--r); font-size: 12px; color: var(--gold); margin-bottom: 20px;
+}
+.file-pick-btn {
+  display: inline-block; margin-top: 10px;
+  padding: 8px 18px; border-radius: 8px; border: 1.5px solid var(--gold);
+  background: transparent; color: var(--gold);
+  font-family: 'JetBrains Mono', monospace; font-size: 11px;
+  cursor: pointer; transition: all .15s;
+}
+.file-pick-btn:hover { background: var(--gold); color: #fff; }
+
+.config-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 28px; }
+.config-card { background: rgba(255,255,255,.55); border: 1px solid var(--border); border-radius: var(--r); padding: 20px; }
+.config-card.span2 { grid-column: 1/-1; }
+.cfg-label { display: block; font-size: 9px; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); margin-bottom: 14px; }
+
+.level-row { display: flex; gap: 10px; }
+.lvl-btn {
+  flex: 1; padding: 14px 6px;
+  border: 1.5px solid var(--border); border-radius: 10px;
+  background: transparent; cursor: pointer;
+  font-family: 'JetBrains Mono', monospace;
+  transition: all .15s;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+}
+.lvl-btn:hover { border-color: var(--gold2); }
+.lvl-btn.active { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+.lvl-btn .ln { font-family: 'Crimson Pro', serif; font-size: 28px; font-weight: 600; line-height: 1; }
+.lvl-btn .lc { font-size: 9px; opacity: .6; }
+
+.toggle-row { display: flex; gap: 10px; }
+.tog-btn {
+  flex: 1; padding: 13px 10px;
+  border: 1.5px solid var(--border); border-radius: 10px;
+  background: transparent; cursor: pointer;
+  font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted);
+  transition: all .15s;
+  display: flex; flex-direction: column; align-items: center; gap: 5px; text-align: center; line-height: 1.4;
+}
+.tog-btn:hover { border-color: var(--red2); color: var(--ink); }
+.tog-btn.active { background: var(--red); border-color: var(--red); color: #fff; }
+.tog-btn .ti { font-size: 20px; }
+.tog-btn .tn { font-weight: 500; }
+.tog-btn .td { font-size: 9px; opacity: .75; }
+
+.dir-btn {
+  flex: 1; padding: 11px 8px;
+  border: 1.5px solid var(--border); border-radius: 10px;
+  background: transparent; cursor: pointer;
+  font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted);
+  line-height: 1.5; transition: all .15s; text-align: center;
+}
+.dir-btn:hover { border-color: var(--gold2); color: var(--ink); }
+.dir-btn.active { background: var(--gold); border-color: var(--gold); color: #fff; }
+
+.slider-row { display: flex; align-items: center; gap: 14px; }
+input[type=range] {
+  flex: 1; -webkit-appearance: none; height: 3px;
+  background: var(--border); border-radius: 2px; outline: none;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%;
+  background: var(--ink); cursor: pointer;
+}
+.slider-val { font-size: 16px; font-weight: 500; min-width: 32px; text-align: right; }
+
+.start-btn {
+  background: var(--ink); color: var(--paper);
+  border: none; border-radius: 10px; padding: 17px 42px;
+  font-family: 'Crimson Pro', serif; font-size: 21px; font-weight: 300; font-style: italic;
+  cursor: pointer; letter-spacing: .02em;
+  display: flex; align-items: center; gap: 10px;
+  transition: all .18s;
+}
+.start-btn:hover:not(:disabled) { background: var(--red); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(181,41,14,.3); }
+.start-btn:disabled { background: var(--muted); cursor: not-allowed; }
+
+/* ── QUIZ ── */
+.quiz-topbar { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; }
+.q-label { font-size: 11px; color: var(--muted); white-space: nowrap; }
+.progress-track { flex: 1; height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.progress-fill {
+  height: 100%; background: linear-gradient(90deg, var(--red), var(--gold2));
+  border-radius: 3px; transition: width .5s cubic-bezier(.4,0,.2,1);
+}
+.quit-btn {
+  background: none; border: 1px solid var(--border); border-radius: 6px;
+  padding: 6px 13px; font-family: 'JetBrains Mono', monospace; font-size: 10px;
+  color: var(--muted); cursor: pointer; letter-spacing: .06em; transition: all .15s;
+}
+.quit-btn:hover { border-color: var(--red); color: var(--red); }
+
+.q-card {
+  background: #fff; border: 1px solid var(--border); border-radius: 18px;
+  padding: 52px 40px 40px; text-align: center; box-shadow: var(--shadow-md);
+  margin-bottom: 22px; position: relative; overflow: hidden;
+}
+.q-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 5px;
+  background: linear-gradient(90deg, var(--red), var(--gold2));
+}
+.q-ctx { font-size: 9px; text-transform: uppercase; letter-spacing: .14em; color: var(--muted); margin-bottom: 18px; }
+.q-main {
+  font-family: 'Noto Serif SC', serif;
+  font-size: clamp(56px, 10vw, 86px); font-weight: 700; color: var(--ink);
+  line-height: 1; margin-bottom: 14px;
+}
+.q-main.roman { font-family: 'Crimson Pro', serif; font-size: clamp(28px, 5vw, 42px); font-weight: 300; font-style: italic; }
+.q-pinyin { font-family: 'Crimson Pro', serif; font-size: 20px; font-style: italic; color: var(--muted); min-height: 28px; transition: opacity .25s; }
+.q-pinyin.hidden { opacity: 0; pointer-events: none; }
+.hint-btn {
+  background: none; border: none; cursor: pointer;
+  font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--muted);
+  letter-spacing: .1em; text-transform: uppercase; margin-top: 14px; padding: 4px; transition: color .15s;
+}
+.hint-btn:hover { color: var(--gold); }
+
+.choices { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 18px; }
+.choice {
+  background: rgba(255,255,255,.6); border: 1.5px solid var(--border); border-radius: 11px;
+  padding: 15px 14px; font-family: 'JetBrains Mono', monospace; font-size: 11px;
+  color: var(--ink); cursor: pointer; transition: all .15s; text-align: left; line-height: 1.5;
+}
+.choice:hover:not(:disabled) { border-color: var(--gold2); background: rgba(224,168,32,.07); transform: translateY(-1px); }
+.choice .ch { font-family: 'Noto Serif SC', serif; font-size: 20px; font-weight: 700; display: block; margin-bottom: 3px; }
+.choice .py { font-size: 9px; color: var(--muted); font-style: italic; }
+.choice.correct { background: rgba(30,107,60,.09); border-color: var(--green); color: var(--green); }
+.choice.wrong   { background: rgba(181,41,14,.07); border-color: var(--red);   color: var(--red); }
+
+.type-area { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-bottom: 18px; }
+.type-input {
+  width: 100%; max-width: 420px; padding: 15px 20px;
+  font-family: 'JetBrains Mono', monospace; font-size: 15px;
+  border: 1.5px solid var(--border); border-radius: 10px;
+  background: #fff; color: var(--ink); outline: none; text-align: center; transition: border-color .15s;
+}
+.type-input:focus { border-color: var(--gold2); }
+.type-input.correct { border-color: var(--green); background: rgba(30,107,60,.05); }
+.type-input.wrong   { border-color: var(--red);   background: rgba(181,41,14,.05); }
+.check-btn {
+  background: var(--ink); color: var(--paper); border: none; border-radius: 8px;
+  padding: 13px 32px; font-family: 'JetBrains Mono', monospace; font-size: 12px;
+  cursor: pointer; letter-spacing: .06em; transition: background .15s;
+}
+.check-btn:hover { background: var(--red); }
+
+.feedback {
+  align-items: center; gap: 12px;
+  padding: 14px 18px; border-radius: 10px; margin-bottom: 16px;
+  animation: slideIn .2s ease;
+}
+@keyframes slideIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+.feedback.correct { background: rgba(30,107,60,.09); border: 1px solid rgba(30,107,60,.3); color: var(--green); }
+.feedback.wrong   { background: rgba(181,41,14,.07); border: 1px solid rgba(181,41,14,.25); color: var(--red); }
+.fb-icon { font-size: 20px; }
+.fb-msg  { flex: 1; font-size: 11px; line-height: 1.6; }
+.next-btn {
+  background: var(--ink); color: var(--paper); border: none; border-radius: 8px;
+  padding: 10px 20px; font-family: 'JetBrains Mono', monospace; font-size: 11px;
+  cursor: pointer; white-space: nowrap; transition: background .15s;
+}
+.next-btn:hover { background: var(--red); }
+
+/* ── RESULTS ── */
+#results-panel { text-align: center; }
+.res-title { font-family: 'Crimson Pro', serif; font-size: clamp(36px, 7vw, 58px); font-weight: 300; font-style: italic; margin-bottom: 4px; }
+.res-sub { font-size: 11px; color: var(--muted); letter-spacing: .1em; text-transform: uppercase; margin-bottom: 40px; }
+
+.ring-wrap { display: flex; justify-content: center; margin-bottom: 36px; }
+.score-ring { position: relative; width: 160px; height: 160px; }
+.score-ring svg { transform: rotate(-90deg); }
+.ring-label { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.ring-pct { font-family: 'Crimson Pro', serif; font-size: 44px; font-weight: 600; line-height: 1; }
+.ring-sub { font-size: 9px; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }
+
+.res-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 36px; }
+.res-stat { background: rgba(255,255,255,.5); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+.rs-val { font-family: 'Crimson Pro', serif; font-size: 30px; font-weight: 600; line-height: 1; margin-bottom: 4px; }
+.rs-lbl { font-size: 9px; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }
+
+.missed-wrap { text-align: left; margin-bottom: 36px; }
+.missed-hd { font-size: 10px; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin-bottom: 12px; }
+.missed-list { display: flex; flex-wrap: wrap; gap: 10px; }
+.missed-pill { background: rgba(181,41,14,.06); border: 1px solid rgba(181,41,14,.2); border-radius: 8px; padding: 8px 14px; display: flex; align-items: center; gap: 10px; }
+.mp-char { font-family: 'Noto Serif SC', serif; font-size: 20px; font-weight: 700; color: var(--red); }
+.mp-info { font-size: 10px; color: var(--muted); line-height: 1.6; }
+
+.res-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.act-btn { padding: 14px 28px; border-radius: 9px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .05em; cursor: pointer; transition: all .15s; border: 1.5px solid var(--ink); }
+.act-btn.primary { background: var(--ink); color: var(--paper); }
+.act-btn.primary:hover { background: var(--red); border-color: var(--red); }
+.act-btn.secondary { background: transparent; color: var(--ink); }
+.act-btn.secondary:hover { border-color: var(--red); color: var(--red); }
+
+/* ── DRAWING PAD ── */
+.draw-wrap {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+.draw-label {
+  font-size: 9px; text-transform: uppercase; letter-spacing: .12em;
+  color: var(--muted); align-self: flex-start;
+}
+.draw-canvas-wrap {
+  position: relative;
+  border: 2px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: var(--shadow-sm);
+  cursor: crosshair;
+  touch-action: none;
+  width: 100%;
+  max-width: 640px;
+}
+.draw-canvas-wrap::after {
+  content: '画';
+  font-family: 'Noto Serif SC', serif;
+  font-size: 150px; font-weight: 700;
+  color: rgba(15,14,12,0.04);
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none;
+}
+#draw-canvas { display: block; width: 100%; max-width: 640px; height: auto; }
+.draw-btns { display: flex; gap: 10px; }
+.draw-clear-btn {
+  background: transparent; border: 1.5px solid var(--border); border-radius: 8px;
+  padding: 10px 20px; font-family: 'JetBrains Mono', monospace; font-size: 11px;
+  color: var(--muted); cursor: pointer; transition: all .15s; letter-spacing: .05em;
+}
+.draw-clear-btn:hover { border-color: var(--red); color: var(--red); }
+.draw-hint-btn {
+  background: transparent; border: 1.5px solid var(--border); border-radius: 8px;
+  padding: 10px 20px; font-family: 'JetBrains Mono', monospace; font-size: 11px;
+  color: var(--muted); cursor: pointer; transition: all .15s; letter-spacing: .05em;
+}
+.draw-hint-btn:hover { border-color: var(--gold); color: var(--gold); }
+.draw-hint-btn.active { border-color: var(--gold); color: var(--gold); background: rgba(184,134,11,.08); }
+.draw-reveal-btn {
+  background: var(--ink); color: var(--paper); border: none; border-radius: 8px;
+  padding: 10px 24px; font-family: 'JetBrains Mono', monospace; font-size: 11px;
+  cursor: pointer; letter-spacing: .05em; transition: background .15s;
+}
+.draw-reveal-btn:hover { background: var(--red); }
+.draw-selfmark {
+  display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 4px;
+}
+.draw-selfmark-lbl {
+  font-size: 10px; text-transform: uppercase; letter-spacing: .1em; color: var(--muted);
+}
+.draw-selfmark-btns { display: flex; gap: 12px; }
+.draw-correct-btn {
+  padding: 11px 28px; border-radius: 8px; border: 1.5px solid var(--green);
+  background: rgba(30,107,60,.08); color: var(--green);
+  font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 500;
+  cursor: pointer; transition: all .15s; letter-spacing: .04em;
+}
+.draw-correct-btn:hover { background: var(--green); color: #fff; }
+.draw-wrong-btn {
+  padding: 11px 28px; border-radius: 8px; border: 1.5px solid var(--red);
+  background: rgba(181,41,14,.07); color: var(--red);
+  font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 500;
+  cursor: pointer; transition: all .15s; letter-spacing: .04em;
+}
+.draw-wrong-btn:hover { background: var(--red); color: #fff; }
+.streak-badge {
+  position: fixed; top: 76px; right: 20px; z-index: 200;
+  background: var(--gold); color: #fff; border-radius: 40px; padding: 8px 18px;
+  font-size: 13px; font-weight: 500;
+  box-shadow: 0 4px 16px rgba(184,134,11,.45);
+  transform: scale(0); transition: transform .35s cubic-bezier(.34,1.56,.64,1); pointer-events: none;
+}
+.streak-badge.show { transform: scale(1); }
+
+@keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-8px)} 75%{transform:translateX(8px)} }
+.shake { animation: shake .22s ease; }
+
+@media(max-width:580px){
+  .config-grid { grid-template-columns: 1fr; }
+  .choices { grid-template-columns: 1fr; }
+  .res-grid { grid-template-columns: 1fr 1fr; }
+  .hstat { display: none; }
+  .q-card { padding: 36px 22px 28px; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<header>
+  <div class="logo">
+    <span class="logo-hanzi">汉字</span>
+    <span class="logo-title">HSK Trainer</span>
+  </div>
+  <div class="header-stats">
+    <div class="hstat"><span class="hstat-val" id="hdr-streak">0</span><span class="hstat-lbl">🔥 streak</span></div>
+    <div class="hstat"><span class="hstat-val" id="hdr-done">0</span><span class="hstat-lbl">done</span></div>
+    <div class="hstat"><span class="hstat-val" id="hdr-acc">—</span><span class="hstat-lbl">accuracy</span></div>
+  </div>
+</header>
+
+<main>
+
+  <!-- SETUP -->
+  <div id="setup-panel" class="panel active">
+    <div class="setup-hero">
+      <h1>Practice reading<br><em>中文</em> characters</h1>
+      <p id="setup-sub">Loading vocabulary…</p>
+    </div>
+
+    <div class="file-notice" id="file-notice" style="display:none">
+      ⚠ Could not auto-load the CSV. Please select it manually:
+      <br><button class="file-pick-btn" id="file-pick-btn">📂 Choose hsk_1_2_3_vocabulary.csv</button>
+    </div>
+
+    <div class="config-grid">
+      <div class="config-card span2">
+        <span class="cfg-label">HSK Level (select one or more)</span>
+        <div class="level-row">
+          <button class="lvl-btn active" data-level="1"><span class="ln">1</span><span class="lc" id="cnt1">…</span></button>
+          <button class="lvl-btn active" data-level="2"><span class="ln">2</span><span class="lc" id="cnt2">…</span></button>
+          <button class="lvl-btn active" data-level="3"><span class="ln">3</span><span class="lc" id="cnt3">…</span></button>
+        </div>
+      </div>
+
+      <div class="config-card">
+        <span class="cfg-label">Quiz Mode</span>
+        <div class="toggle-row">
+          <button class="tog-btn active" data-mode="mc">
+            <span class="ti">🎯</span><span class="tn">Multiple Choice</span><span class="td">Pick from 4 options</span>
+          </button>
+          <button class="tog-btn" data-mode="type">
+            <span class="ti">⌨️</span><span class="tn">Type Answer</span><span class="td">Type characters or English</span>
+          </button>
+          <button class="tog-btn" data-mode="draw">
+            <span class="ti">✏️</span><span class="tn">Draw</span><span class="td">Handwrite the character</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="config-card">
+        <span class="cfg-label">Question Direction</span>
+        <div class="toggle-row">
+          <button class="dir-btn active" data-dir="zh-en">🇨🇳 → 🇬🇧<br><small>Char → English</small></button>
+          <button class="dir-btn" data-dir="en-zh">🇬🇧 → 🇨🇳<br><small>English → Char</small></button>
+          <button class="dir-btn" data-dir="py-zh">pīn → 字<br><small>Pinyin → Char</small></button>
+        </div>
+      </div>
+
+      <div class="config-card">
+        <span class="cfg-label">Pinyin Hint (zh→en mode)</span>
+        <div class="toggle-row">
+          <button class="tog-btn active" data-pinyin="show"><span class="ti">👁</span><span class="tn">Show</span><span class="td">Always visible</span></button>
+          <button class="tog-btn" data-pinyin="click"><span class="ti">🫣</span><span class="tn">On Tap</span><span class="td">Reveal on request</span></button>
+          <button class="tog-btn" data-pinyin="hide"><span class="ti">🙈</span><span class="tn">Hide</span><span class="td">No pinyin</span></button>
+        </div>
+      </div>
+
+      <div class="config-card">
+        <span class="cfg-label">Number of Questions</span>
+        <div class="slider-row">
+          <input type="range" id="q-slider" min="5" max="50" step="5" value="20">
+          <span class="slider-val" id="q-slider-val">20</span>
+        </div>
+      </div>
+    </div>
+
+    <button class="start-btn" id="start-btn" disabled>Begin Session →</button>
+  </div>
+
+  <!-- QUIZ -->
+  <div id="quiz-panel" class="panel">
+    <div class="quiz-topbar">
+      <span class="q-label" id="q-label">1 / 20</span>
+      <div class="progress-track"><div class="progress-fill" id="prog" style="width:0%"></div></div>
+      <button class="quit-btn" id="quit-btn">QUIT</button>
+    </div>
+
+    <div class="q-card">
+      <div class="q-ctx" id="q-ctx">What does this mean?</div>
+      <div class="q-main" id="q-main"></div>
+      <div class="q-pinyin hidden" id="q-pinyin"></div>
+      <button class="hint-btn" id="hint-btn" style="display:none">▸ show pinyin</button>
+    </div>
+
+    <div class="choices" id="choices-wrap"></div>
+
+    <div class="type-area" id="type-wrap" style="display:none">
+      <input class="type-input" id="type-input" placeholder="type the English meaning…"
+        autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+      <button class="check-btn" id="check-btn">Check ✓</button>
+    </div>
+
+    <!-- Handwriting pad — shown in draw mode -->
+    <div class="draw-wrap" id="draw-wrap">
+      <span class="draw-label">✏ Draw the character</span>
+      <div class="draw-canvas-wrap">
+        <canvas id="draw-canvas" width="640" height="320"></canvas>
+      </div>
+      <div class="draw-btns">
+        <button class="draw-clear-btn" id="draw-clear-btn">Clear</button>
+        <button class="draw-hint-btn" id="draw-hint-btn">Hint 👁</button>
+        <button class="draw-reveal-btn" id="draw-reveal-btn">Reveal answer</button>
+      </div>
+      <div class="draw-selfmark" id="draw-selfmark" style="display:none">
+        <span class="draw-selfmark-lbl">How did you do?</span>
+        <div class="draw-selfmark-btns">
+          <button class="draw-correct-btn" id="draw-correct-btn">✓ Got it</button>
+          <button class="draw-wrong-btn" id="draw-wrong-btn">✗ Missed it</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="feedback" id="feedback">
+      <span class="fb-icon" id="fb-icon"></span>
+      <span class="fb-msg" id="fb-msg"></span>
+      <button class="next-btn" id="next-btn">Next →</button>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="results-panel" class="panel">
+    <h2 class="res-title" id="res-title">Well done!</h2>
+    <p class="res-sub" id="res-sub">Session complete</p>
+
+    <div class="ring-wrap">
+      <div class="score-ring">
+        <svg width="160" height="160" viewBox="0 0 160 160">
+          <circle cx="80" cy="80" r="66" fill="none" stroke="var(--paper2)" stroke-width="11"/>
+          <circle id="arc" cx="80" cy="80" r="66" fill="none" stroke="var(--red)" stroke-width="11"
+            stroke-dasharray="414.7" stroke-dashoffset="414.7" stroke-linecap="round"
+            style="transition:stroke-dashoffset 1s ease .3s"/>
+        </svg>
+        <div class="ring-label">
+          <span class="ring-pct" id="ring-pct">0%</span>
+          <span class="ring-sub">correct</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="res-grid">
+      <div class="res-stat"><div class="rs-val" id="r-correct" style="color:var(--green)">0</div><div class="rs-lbl">Correct</div></div>
+      <div class="res-stat"><div class="rs-val" id="r-wrong" style="color:var(--red)">0</div><div class="rs-lbl">Wrong</div></div>
+      <div class="res-stat"><div class="rs-val" id="r-streak">0</div><div class="rs-lbl">Best Streak</div></div>
+      <div class="res-stat"><div class="rs-val" id="r-time">0s</div><div class="rs-lbl">Time</div></div>
+    </div>
+
+    <div class="missed-wrap" id="missed-wrap" style="display:none">
+      <div class="missed-hd">Review these words</div>
+      <div class="missed-list" id="missed-list"></div>
+    </div>
+
+    <div class="res-actions">
+      <button class="act-btn primary" id="retry-btn" style="display:none">Retry wrong answers</button>
+      <button class="act-btn primary" id="again-btn">Play again</button>
+      <button class="act-btn secondary" id="settings-btn">Change settings</button>
+    </div>
+  </div>
+
+</main>
+</div>
+
+<div class="streak-badge" id="streak-badge">🔥 <span id="streak-num">3</span> in a row!</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+//  CSV LOADING — reads file; does not embed data
+// ═══════════════════════════════════════════════════
+let VOCAB = [];
+let retryMode = false;
+let sessionWrong = [];
+
+function parseCSV(text) {
+  const lines = text.trim().split(/\r?\n/);
+  const result = [];
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
+    // Split on commas, but the English field may contain commas
+    // Format: Characters,Pinyin,English...,HSK Level
+    const cols = line.split(',');
+    if (cols.length < 4) continue;
+    const chars   = cols[0].trim();
+    const pinyin  = cols[1].trim();
+    const level   = parseInt(cols[cols.length - 1].trim());
+    const english = cols.slice(2, cols.length - 1).join(',').trim();
+    if (!chars || !pinyin || !english || isNaN(level)) continue;
+    result.push({ chars, pinyin, english, level });
+  }
+  return result;
+}
+
+function onVocabLoaded() {
+  const c1 = VOCAB.filter(w => w.level === 1).length;
+  const c2 = VOCAB.filter(w => w.level === 2).length;
+  const c3 = VOCAB.filter(w => w.level === 3).length;
+  document.getElementById('cnt1').textContent = c1 + ' words';
+  document.getElementById('cnt2').textContent = c2 + ' words';
+  document.getElementById('cnt3').textContent = c3 + ' words';
+  document.getElementById('setup-sub').textContent =
+    `HSK 1–3 · ${VOCAB.length} words · multiple choice or typing`;
+  document.getElementById('start-btn').disabled = false;
+}
+
+async function loadVocab() {
+  // Try common filenames relative to this HTML file
+  const candidates = [
+    'hsk_1_2_3_vocabulary.csv',
+    'vocab.csv',
+    'hsk_vocabulary.csv'
+  ];
+  for (const name of candidates) {
+    try {
+      const res = await fetch(name);
+      if (!res.ok) continue;
+      const text = await res.text();
+      const parsed = parseCSV(text);
+      if (parsed.length > 10) {
+        VOCAB = parsed;
+        onVocabLoaded();
+        return;
+      }
+    } catch (_) {}
+  }
+  // Auto-fetch failed — show manual file picker
+  document.getElementById('file-notice').style.display = 'block';
+}
+
+// Manual file picker button
+document.getElementById('file-pick-btn').addEventListener('click', () => {
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = '.csv';
+  inp.onchange = async e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const text = await file.text();
+    const parsed = parseCSV(text);
+    if (parsed.length > 0) {
+      VOCAB = parsed;
+      document.getElementById('file-notice').style.display = 'none';
+      onVocabLoaded();
+    } else {
+      alert('Could not parse CSV. Make sure it has columns: Characters, Pinyin, English, HSK Level');
+    }
+  };
+  inp.click();
+});
+
+// ═══════════════════════════════════════════════════
+//  CONFIGURATION STATE
+// ═══════════════════════════════════════════════════
+const cfg = { levels: new Set([1,2,3]), mode: 'mc', dir: 'zh-en', pinyin: 'show', count: 20 };
+
+document.querySelectorAll('.lvl-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const l = parseInt(btn.dataset.level);
+    if (cfg.levels.has(l) && cfg.levels.size > 1) {
+      cfg.levels.delete(l); btn.classList.remove('active');
+    } else {
+      cfg.levels.add(l); btn.classList.add('active');
+    }
+  });
+});
+
+document.querySelectorAll('[data-mode]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-mode]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active'); cfg.mode = btn.dataset.mode;
+  });
+});
+
+document.querySelectorAll('[data-dir]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-dir]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active'); cfg.dir = btn.dataset.dir;
+  });
+});
+
+document.querySelectorAll('[data-pinyin]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-pinyin]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active'); cfg.pinyin = btn.dataset.pinyin;
+  });
+});
+
+const slider = document.getElementById('q-slider');
+slider.addEventListener('input', () => {
+  cfg.count = parseInt(slider.value);
+  document.getElementById('q-slider-val').textContent = slider.value;
+});
+
+// ═══════════════════════════════════════════════════
+//  QUIZ ENGINE
+// ═══════════════════════════════════════════════════
+let questions = [], qIdx = 0, correct = 0, wrong = 0;
+let bestStreak = 0, curStreak = 0;
+let sessionStart = 0, answered = false;
+let totalDone = 0, totalCorrect = 0;
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function startQuiz() {
+  const pool = retryMode ? [...sessionWrong] : VOCAB.filter(w => cfg.levels.has(w.level));
+  questions = shuffle(pool).slice(0, cfg.count);
+  qIdx = 0; correct = 0; wrong = 0; curStreak = 0; bestStreak = 0;
+  sessionWrong = []; sessionStart = Date.now(); answered = false;
+  showPanel('quiz-panel');
+  renderQuestion();
+}
+
+function renderQuestion() {
+  answered = false;
+  const word  = questions[qIdx];
+  const total = questions.length;
+
+  document.getElementById('q-label').textContent = `${qIdx + 1} / ${total}`;
+  document.getElementById('prog').style.width = `${(qIdx / total) * 100}%`;
+
+  const mainEl   = document.getElementById('q-main');
+  const pinyinEl = document.getElementById('q-pinyin');
+  const ctxEl    = document.getElementById('q-ctx');
+  const hintBtn  = document.getElementById('hint-btn');
+
+  pinyinEl.classList.add('hidden');
+  hintBtn.style.display = 'none';
+
+  if (cfg.dir === 'zh-en') {
+    mainEl.textContent = word.chars;
+    mainEl.className = 'q-main';
+    ctxEl.textContent = 'What does this mean?';
+    pinyinEl.textContent = word.pinyin;
+    if (cfg.pinyin === 'show') pinyinEl.classList.remove('hidden');
+    else if (cfg.pinyin === 'click') hintBtn.style.display = 'inline';
+  } else if (cfg.dir === 'en-zh') {
+    mainEl.textContent = word.english.split(';')[0].trim();
+    mainEl.className = 'q-main roman';
+    ctxEl.textContent = cfg.mode === 'type' ? 'Type and/or draw the character' : 'Which character matches?';
+  } else {
+    mainEl.textContent = word.pinyin;
+    mainEl.className = 'q-main roman';
+    ctxEl.textContent = 'Which character matches this pinyin?';
+  }
+
+  // Clear feedback
+  const fb = document.getElementById('feedback');
+  fb.style.display = 'none'; fb.className = 'feedback';
+  hideDrawPad();
+
+  if (cfg.mode === 'mc') renderChoices(word);
+  else if (cfg.mode === 'draw') { showDrawPad(); }
+  else renderTypeInput();
+}
+
+function renderChoices(word) {
+  document.getElementById('type-wrap').style.display = 'none';
+  const wrap = document.getElementById('choices-wrap');
+  wrap.style.display = 'grid'; wrap.innerHTML = '';
+
+  const pool = VOCAB.filter(w => w !== word);
+  const opts = shuffle([word, ...shuffle(pool).slice(0, 3)]);
+
+  opts.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'choice';
+
+    if (cfg.dir === 'zh-en') {
+      btn.textContent = opt.english.split(';')[0].trim();
+    } else {
+      const ch = document.createElement('span'); ch.className = 'ch'; ch.textContent = opt.chars;
+      const py = document.createElement('span'); py.className = 'py'; py.textContent = opt.pinyin;
+      btn.append(ch, py);
+    }
+
+    btn.addEventListener('click', () => {
+      if (answered) return;
+      answered = true;
+      const isCorrect = opt === word;
+      recordAnswer(isCorrect, word);
+
+      document.querySelectorAll('.choice').forEach(b => { b.disabled = true; });
+      btn.classList.add(isCorrect ? 'correct' : 'wrong');
+
+      // Always highlight the correct answer
+      if (!isCorrect) {
+        document.querySelectorAll('.choice').forEach(b => {
+          const txt = cfg.dir === 'zh-en' ? b.textContent.trim() : b.querySelector('.ch')?.textContent;
+          const match = cfg.dir === 'zh-en'
+            ? txt === word.english.split(';')[0].trim()
+            : txt === word.chars;
+          if (match) b.classList.add('correct');
+        });
+      }
+      showFeedback(isCorrect, word, null);
+    });
+
+    wrap.appendChild(btn);
+  });
+}
+
+function renderTypeInput() {
+  document.getElementById('choices-wrap').style.display = 'none';
+  hideDrawPad();
+  document.getElementById('type-wrap').style.display = 'flex';
+  const inp = document.getElementById('type-input');
+  inp.value = ''; inp.className = 'type-input';
+  inp.placeholder = (cfg.dir === 'en-zh' || cfg.dir === 'py-zh')
+    ? 'type the character(s)…'
+    : 'type the English meaning…';
+  setTimeout(() => inp.focus(), 50);
+}
+
+function normalise(s) {
+  return s.toLowerCase().trim()
+    .replace(/[.!?;,\-()]/g, '')   // strip punctuation
+    .replace(/\bto\b/g, '')        // strip leading "to" from verbs
+    .replace(/\ba\b|\ban\b|\bthe\b/g, '')  // strip articles
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function isAnswerCorrect(val, word) {
+  // In en→zh or pinyin→zh mode, user must type the character(s)
+  if (cfg.dir === 'en-zh' || cfg.dir === 'py-zh') {
+    return val.trim() === word.chars.trim();
+  }
+
+  // zh→en mode: fuzzy English matching
+  const input = normalise(val);
+  const meanings = word.english.split(';').map(m => normalise(m));
+
+  // 1. Exact match after normalisation
+  if (meanings.some(m => input === m)) return true;
+
+  // 2. Input matches the start of any meaning (e.g. "eat" matches "eat food")
+  if (meanings.some(m => m.startsWith(input) && input.length >= 3)) return true;
+
+  // 3. Any meaning starts with the input words (handles "make phone call" vs "to make a phone call")
+  if (meanings.some(m => m.replace(/\s+/g,'').includes(input.replace(/\s+/g,'')) && input.length >= 3)) return true;
+
+  // 4. Levenshtein distance — allow 1 typo for words ≤8 chars, 2 typos for longer
+  for (const m of meanings) {
+    const allowedDist = m.length <= 5 ? 1 : m.length <= 10 ? 2 : 3;
+    if (levenshtein(input, m) <= allowedDist) return true;
+    const inputWords = input.split(' ').filter(Boolean);
+    const meaningWords = m.split(' ').filter(Boolean);
+    const allPresent = inputWords.every(iw => meaningWords.some(mw => levenshtein(iw, mw) <= 1));
+    if (allPresent && inputWords.length >= Math.ceil(meaningWords.length * 0.6)) return true;
+  }
+
+  return false;
+}
+
+function levenshtein(a, b) {
+  const m = a.length, n = b.length;
+  const dp = Array.from({length: m+1}, (_, i) => Array.from({length: n+1}, (_, j) => i === 0 ? j : j === 0 ? i : 0));
+  for (let i = 1; i <= m; i++)
+    for (let j = 1; j <= n; j++)
+      dp[i][j] = a[i-1] === b[j-1] ? dp[i-1][j-1] : 1 + Math.min(dp[i-1][j-1], dp[i-1][j], dp[i][j-1]);
+  return dp[m][n];
+}
+
+function submitType() {
+  if (answered) return;
+  const inp = document.getElementById('type-input');
+  const val = inp.value.trim();
+  if (!val) return;
+  answered = true;
+
+  const word = questions[qIdx];
+  const isCorrect = isAnswerCorrect(val, word);
+
+  inp.className = 'type-input ' + (isCorrect ? 'correct' : 'wrong');
+  if (!isCorrect) { inp.classList.add('shake'); setTimeout(() => inp.classList.remove('shake'), 300); }
+
+  recordAnswer(isCorrect, word);
+  showFeedback(isCorrect, word, isCorrect ? null : val);
+}
+
+document.getElementById('check-btn').addEventListener('click', submitType);
+document.getElementById('type-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    e.stopPropagation();
+    if (!answered) submitType();
+    else advance();
+  }
+});
+
+function recordAnswer(isCorrect, word) {
+  totalDone++;
+  if (isCorrect) {
+    correct++; totalCorrect++; curStreak++;
+    if (curStreak > bestStreak) bestStreak = curStreak;
+    if (curStreak >= 3) showStreakBadge(curStreak);
+  } else {
+    wrong++; curStreak = 0;
+    sessionWrong.push(word);
+  }
+  updateHeaderStats();
+}
+
+function showFeedback(isCorrect, word, typedVal) {
+  const fb = document.getElementById('feedback');
+  fb.style.display = 'flex';
+  fb.className = 'feedback ' + (isCorrect ? 'correct' : 'wrong');
+  document.getElementById('fb-icon').textContent = isCorrect ? '✓' : '✗';
+  const phrases = isCorrect
+    ? ['Correct!', 'Nice!', 'Well done!', 'Spot on!', '正确！']
+    : ['Not quite.', 'Not this time.', 'Almost!'];
+  const phrase = phrases[Math.floor(Math.random() * phrases.length)];
+  const allMeanings = word.english.split(';').map(m => m.trim()).join(', ');
+
+  if (!isCorrect && typedVal) {
+    // Type mode wrong: show what they typed vs all correct answers
+    document.getElementById('fb-msg').innerHTML =
+      `<strong>${phrase}</strong> You typed: <span style="text-decoration:line-through;opacity:.7">${typedVal}</span><br>` +
+      `✓ ${word.chars} = <em>${allMeanings}</em> <span style="opacity:.7">(${word.pinyin})</span>`;
+  } else {
+    document.getElementById('fb-msg').innerHTML =
+      `<strong>${phrase}</strong> ${word.chars} = <em>${allMeanings}</em> <span style="opacity:.7">(${word.pinyin})</span>`;
+  }
+  fb.style.display = 'flex';
+}
+
+document.getElementById('next-btn').addEventListener('click', advance);
+document.getElementById('hint-btn').addEventListener('click', () => {
+  document.getElementById('q-pinyin').classList.remove('hidden');
+  document.getElementById('hint-btn').style.display = 'none';
+});
+document.getElementById('quit-btn').addEventListener('click', () => {
+  if (confirm('Quit this session?')) showPanel('setup-panel');
+});
+
+function advance() {
+  qIdx++;
+  if (qIdx >= questions.length) showResults();
+  else {
+    document.getElementById('type-input').value = '';
+    document.getElementById('type-input').className = 'type-input';
+    initDrawCanvas();
+    renderQuestion();
+  }
+}
+
+// ═══════════════════════════════════════════════════
+//  RESULTS
+// ═══════════════════════════════════════════════════
+function showResults() {
+  showPanel('results-panel');
+  const elapsed = Math.round((Date.now() - sessionStart) / 1000);
+  const pct = Math.round((correct / questions.length) * 100);
+
+  document.getElementById('res-title').textContent =
+    pct === 100 ? '完美！ Perfect!' : pct >= 80 ? 'Great work!' : pct >= 60 ? 'Keep practising!' : '加油！ Keep going!';
+  document.getElementById('res-sub').textContent =
+    `${questions.length} questions · HSK ${[...cfg.levels].sort().join('+')}`;
+
+  setTimeout(() => {
+    const circ = 414.7;
+    const arc = document.getElementById('arc');
+    arc.style.strokeDashoffset = circ - (circ * pct / 100);
+    arc.style.stroke = pct >= 70 ? 'var(--green)' : pct >= 50 ? 'var(--gold)' : 'var(--red)';
+  }, 50);
+  document.getElementById('ring-pct').textContent = pct + '%';
+  document.getElementById('r-correct').textContent = correct;
+  document.getElementById('r-wrong').textContent = wrong;
+  document.getElementById('r-streak').textContent = bestStreak;
+  document.getElementById('r-time').textContent = elapsed < 60 ? elapsed + 's' : Math.floor(elapsed/60) + 'm ' + (elapsed%60) + 's';
+
+  const missedWrap = document.getElementById('missed-wrap');
+  const missedList = document.getElementById('missed-list');
+  missedList.innerHTML = '';
+  const unique = [...new Map(sessionWrong.map(w => [w.chars, w])).values()];
+  if (unique.length > 0) {
+    missedWrap.style.display = 'block';
+    unique.forEach(w => {
+      const p = document.createElement('div'); p.className = 'missed-pill';
+      p.innerHTML = `<span class="mp-char">${w.chars}</span>
+        <span class="mp-info">${w.pinyin}<br><em>${w.english.split(';')[0].trim()}</em></span>`;
+      missedList.appendChild(p);
+    });
+    document.getElementById('retry-btn').style.display = 'inline-block';
+  } else {
+    missedWrap.style.display = 'none';
+    document.getElementById('retry-btn').style.display = 'none';
+  }
+}
+
+document.getElementById('again-btn').addEventListener('click', () => { retryMode = false; startQuiz(); });
+document.getElementById('retry-btn').addEventListener('click', () => { retryMode = true; startQuiz(); });
+document.getElementById('settings-btn').addEventListener('click', () => { retryMode = false; showPanel('setup-panel'); });
+document.getElementById('start-btn').addEventListener('click', () => { retryMode = false; startQuiz(); });
+
+// ═══════════════════════════════════════════════════
+//  HEADER STATS & STREAK BADGE
+// ═══════════════════════════════════════════════════
+function updateHeaderStats() {
+  document.getElementById('hdr-streak').textContent = curStreak;
+  document.getElementById('hdr-done').textContent = totalDone;
+  document.getElementById('hdr-acc').textContent = totalDone > 0
+    ? Math.round(totalCorrect / totalDone * 100) + '%' : '—';
+}
+
+let streakTimer;
+function showStreakBadge(n) {
+  const b = document.getElementById('streak-badge');
+  document.getElementById('streak-num').textContent = n;
+  b.classList.add('show'); clearTimeout(streakTimer);
+  streakTimer = setTimeout(() => b.classList.remove('show'), 2200);
+}
+
+// ═══════════════════════════════════════════════════
+//  KEYBOARD SHORTCUTS
+// ═══════════════════════════════════════════════════
+document.addEventListener('keydown', e => {
+  // Enter to advance when feedback is shown
+  if (e.key === 'Enter' && answered && document.getElementById('feedback').style.display !== 'none') {
+    if (document.getElementById('quiz-panel').classList.contains('active')) advance();
+  }
+  // Number keys 1–4 for MC options
+  if (['1','2','3','4'].includes(e.key) && cfg.mode === 'mc' && !answered) {
+    const choices = document.querySelectorAll('.choice:not(:disabled)');
+    const i = parseInt(e.key) - 1;
+    if (choices[i]) choices[i].click();
+  }
+});
+
+// ═══════════════════════════════════════════════════
+//  PANEL SWITCHER
+// ═══════════════════════════════════════════════════
+function showPanel(id) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ═══════════════════════════════════════════════════
+//  DRAWING PAD
+// ═══════════════════════════════════════════════════
+const drawCanvas = document.getElementById('draw-canvas');
+const drawCtx    = drawCanvas.getContext('2d');
+let isDrawing = false, drawHasStrokes = false;
+
+function initDrawCanvas() {
+  drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+  drawCtx.strokeStyle = '#0f0e0c';
+  drawCtx.lineWidth = 5;
+  drawCtx.lineCap = 'round';
+  drawCtx.lineJoin = 'round';
+  drawHasStrokes = false;
+  hintShown = false;
+  hintImageData = null;
+  document.getElementById('draw-hint-btn').classList.remove('active');
+  document.getElementById('draw-hint-btn').textContent = 'Hint 👁';
+  document.getElementById('draw-hint-btn').style.display = 'inline-block';
+  document.getElementById('draw-reveal-btn').style.display = 'inline-block';
+  document.getElementById('draw-selfmark').style.display = 'none';
+}
+
+function getPos(e) {
+  const rect = drawCanvas.getBoundingClientRect();
+  const scaleX = drawCanvas.width  / rect.width;
+  const scaleY = drawCanvas.height / rect.height;
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+  return {
+    x: (clientX - rect.left) * scaleX,
+    y: (clientY - rect.top)  * scaleY
+  };
+}
+
+drawCanvas.addEventListener('mousedown',  e => { isDrawing = true; drawHasStrokes = true; drawCtx.beginPath(); const p = getPos(e); drawCtx.moveTo(p.x, p.y); });
+drawCanvas.addEventListener('mousemove',  e => { if (!isDrawing) return; const p = getPos(e); drawCtx.lineTo(p.x, p.y); drawCtx.stroke(); });
+drawCanvas.addEventListener('mouseup',    () => { isDrawing = false; });
+drawCanvas.addEventListener('mouseleave', () => { isDrawing = false; });
+drawCanvas.addEventListener('touchstart', e => { e.preventDefault(); isDrawing = true; drawHasStrokes = true; drawCtx.beginPath(); const p = getPos(e); drawCtx.moveTo(p.x, p.y); }, {passive:false});
+drawCanvas.addEventListener('touchmove',  e => { e.preventDefault(); if (!isDrawing) return; const p = getPos(e); drawCtx.lineTo(p.x, p.y); drawCtx.stroke(); }, {passive:false});
+drawCanvas.addEventListener('touchend',   () => { isDrawing = false; });
+
+let hintShown = false;
+let hintImageData = null; // snapshot of canvas before hint overlay
+
+document.getElementById('draw-clear-btn').addEventListener('click', () => {
+  hintShown = false;
+  hintImageData = null;
+  document.getElementById('draw-hint-btn').classList.remove('active');
+  document.getElementById('draw-hint-btn').textContent = 'Hint 👁';
+  initDrawCanvas();
+});
+
+document.getElementById('draw-hint-btn').addEventListener('click', () => {
+  if (answered) return;
+  const word = questions[qIdx];
+  if (!hintShown) {
+    // Save current canvas state so we can restore it when hint is toggled off
+    hintImageData = drawCtx.getImageData(0, 0, drawCanvas.width, drawCanvas.height);
+    const ref = renderRefChar(word.chars);
+    drawCtx.globalAlpha = 0.2;
+    drawCtx.drawImage(ref, 0, 0);
+    drawCtx.globalAlpha = 1.0;
+    hintShown = true;
+    document.getElementById('draw-hint-btn').classList.add('active');
+    document.getElementById('draw-hint-btn').textContent = 'Hide hint';
+  } else {
+    // Restore canvas to before the hint was drawn
+    if (hintImageData) drawCtx.putImageData(hintImageData, 0, 0);
+    hintShown = false;
+    hintImageData = null;
+    document.getElementById('draw-hint-btn').classList.remove('active');
+    document.getElementById('draw-hint-btn').textContent = 'Hint 👁';
+  }
+});
+
+document.getElementById('draw-reveal-btn').addEventListener('click', () => {
+  if (answered) return;
+  // Restore pre-hint canvas if hint is showing
+  if (hintShown && hintImageData) {
+    drawCtx.putImageData(hintImageData, 0, 0);
+    hintShown = false;
+    hintImageData = null;
+    document.getElementById('draw-hint-btn').classList.remove('active');
+    document.getElementById('draw-hint-btn').textContent = 'Hint 👁';
+  }
+  // Overlay the correct character
+  const word = questions[qIdx];
+  const refCanvas = renderRefChar(word.chars);
+  drawCtx.globalAlpha = 0.3;
+  drawCtx.drawImage(refCanvas, 0, 0);
+  drawCtx.globalAlpha = 1.0;
+  // Show self-mark buttons
+  document.getElementById('draw-reveal-btn').style.display = 'none';
+  document.getElementById('draw-hint-btn').style.display = 'none';
+  document.getElementById('draw-selfmark').style.display = 'flex';
+});
+
+function resolveDraw(isCorrect) {
+  if (answered) return;
+  answered = true;
+  const word = questions[qIdx];
+  recordAnswer(isCorrect, word);
+  document.getElementById('draw-selfmark').style.display = 'none';
+  showFeedback(isCorrect, word, null);
+}
+
+document.getElementById('draw-correct-btn').addEventListener('click', () => resolveDraw(true));
+document.getElementById('draw-wrong-btn').addEventListener('click',   () => resolveDraw(false));
+
+function renderRefChar(char) {
+  const ref = document.createElement('canvas');
+  ref.width = 640; ref.height = 320;
+  const rCtx = ref.getContext('2d');
+  rCtx.fillStyle = '#ffffff';
+  rCtx.fillRect(0, 0, 640, 320);
+  rCtx.font = '220px "Noto Serif SC", serif';
+  rCtx.textAlign = 'center';
+  rCtx.textBaseline = 'alphabetic';
+  const metrics = rCtx.measureText(char);
+  const textHeight = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
+  const y = (320 - textHeight) / 2 + metrics.actualBoundingBoxAscent;
+  rCtx.fillStyle = '#0f0e0c';
+  rCtx.fillText(char, 320, y);
+  return ref;
+}
+
+function showDrawPad() {
+  document.getElementById('draw-wrap').style.display = 'flex';
+  initDrawCanvas();
+}
+
+function hideDrawPad() {
+  document.getElementById('draw-wrap').style.display = 'none';
+}
+
+// Start!
+loadVocab();
+</script>
+</body>
+</html>
