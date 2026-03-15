@@ -399,6 +399,78 @@ input[type=range]::-webkit-slider-thumb {
   word-break: break-word;
 }
 
+/* ── STATS PANEL ── */
+.stats-back-btn {
+  background: none; border: 1px solid var(--border); border-radius: 6px;
+  padding: 7px 14px; font-family: 'JetBrains Mono', monospace; font-size: 10px;
+  color: var(--muted); cursor: pointer; letter-spacing: .06em; transition: all .15s;
+  margin-bottom: 28px; display: inline-block;
+}
+.stats-back-btn:hover { border-color: var(--red); color: var(--red); }
+.stats-title {
+  font-family: 'Crimson Pro', serif; font-size: 38px; font-weight: 300; font-style: italic;
+  margin-bottom: 6px;
+}
+.stats-sub { font-size: 11px; color: var(--muted); letter-spacing: .07em; margin-bottom: 32px; }
+.stats-hsk-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-bottom: 32px; }
+.stats-hsk-card {
+  background: rgba(255,255,255,.55); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 18px; text-align: center;
+}
+.stats-hsk-card .shc-level {
+  font-family: 'Crimson Pro', serif; font-size: 36px; font-weight: 600; line-height: 1;
+}
+.stats-hsk-card .shc-label { font-size: 9px; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin-bottom: 10px; }
+.stats-hsk-card .shc-bar-wrap { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; margin-bottom: 6px; }
+.stats-hsk-card .shc-bar { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--red), var(--gold2)); transition: width .8s ease; }
+.stats-hsk-card .shc-pct { font-size: 11px; color: var(--muted); }
+
+.stats-section-title { font-size: 10px; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin-bottom: 14px; }
+
+/* Mastery grid */
+.mastery-grid {
+  display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 32px;
+}
+.mg-cell {
+  width: 36px; height: 36px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Noto Serif SC', serif; font-size: 14px; font-weight: 700;
+  cursor: default; transition: transform .1s;
+  border: 1px solid transparent;
+  position: relative;
+}
+.mg-cell:hover { transform: scale(1.15); z-index: 10; }
+.mg-cell.unseen   { background: rgba(15,14,12,0.06); color: var(--muted); border-color: var(--border); }
+.mg-cell.learning { background: rgba(181,41,14,0.12); color: var(--red); border-color: rgba(181,41,14,.25); }
+.mg-cell.familiar { background: rgba(184,134,11,0.15); color: var(--gold); border-color: rgba(184,134,11,.3); }
+.mg-cell.mastered { background: rgba(30,107,60,0.12); color: var(--green); border-color: rgba(30,107,60,.25); }
+
+.mastery-legend { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 32px; }
+.ml-item { display: flex; align-items: center; gap: 6px; font-size: 10px; color: var(--muted); }
+.ml-dot { width: 12px; height: 12px; border-radius: 3px; }
+
+/* Struggled words */
+.struggled-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 32px; }
+.struggled-row {
+  display: flex; align-items: center; gap: 14px;
+  background: rgba(255,255,255,.5); border: 1px solid var(--border);
+  border-radius: 9px; padding: 10px 14px;
+}
+.sr-char { font-family: 'Noto Serif SC', serif; font-size: 22px; font-weight: 700; min-width: 36px; }
+.sr-info { flex: 1; }
+.sr-py   { font-size: 11px; font-style: italic; color: var(--muted); }
+.sr-en   { font-size: 11px; }
+.sr-bar-wrap { width: 80px; height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.sr-bar  { height: 100%; border-radius: 3px; }
+.sr-stat { font-size: 10px; color: var(--muted); min-width: 50px; text-align: right; }
+
+.stats-reset-btn {
+  background: transparent; border: 1.5px solid var(--border); border-radius: 8px;
+  padding: 10px 20px; font-family: 'JetBrains Mono', monospace; font-size: 11px;
+  color: var(--muted); cursor: pointer; transition: all .15s; letter-spacing: .05em;
+}
+.stats-reset-btn:hover { border-color: var(--red); color: var(--red); }
+
 @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-8px)} 75%{transform:translateX(8px)} }
 .shake { animation: shake .22s ease; }
 
@@ -433,6 +505,7 @@ input[type=range]::-webkit-slider-thumb {
     <div class="setup-hero">
       <h1>Practice reading<br><em>中文</em> characters</h1>
       <p id="setup-sub">Loading vocabulary…</p>
+      <button class="stats-back-btn" id="open-stats-btn" style="margin-top:12px;margin-bottom:0">📊 View progress</button>
     </div>
 
     <div class="file-notice" id="file-notice" style="display:none">
@@ -634,6 +707,49 @@ input[type=range]::-webkit-slider-thumb {
     </div>
   </div>
 
+  <!-- STATS PANEL -->
+  <div id="stats-panel" class="panel">
+    <button class="stats-back-btn" id="stats-back-btn">← Back to setup</button>
+    <h2 class="stats-title">Your progress</h2>
+    <p class="stats-sub" id="stats-sub">0 words studied</p>
+
+    <div class="stats-hsk-grid">
+      <div class="stats-hsk-card">
+        <div class="shc-label">HSK 1</div>
+        <div class="shc-level" style="color:var(--green)" id="shc1-pct">0%</div>
+        <div class="shc-bar-wrap"><div class="shc-bar" id="shc1-bar" style="width:0%"></div></div>
+        <div class="shc-pct" id="shc1-seen">0 / 0 seen</div>
+      </div>
+      <div class="stats-hsk-card">
+        <div class="shc-label">HSK 2</div>
+        <div class="shc-level" style="color:var(--gold)" id="shc2-pct">0%</div>
+        <div class="shc-bar-wrap"><div class="shc-bar" id="shc2-bar" style="width:0%"></div></div>
+        <div class="shc-pct" id="shc2-seen">0 / 0 seen</div>
+      </div>
+      <div class="stats-hsk-card">
+        <div class="shc-label">HSK 3</div>
+        <div class="shc-level" style="color:var(--red)" id="shc3-pct">0%</div>
+        <div class="shc-bar-wrap"><div class="shc-bar" id="shc3-bar" style="width:0%"></div></div>
+        <div class="shc-pct" id="shc3-seen">0 / 0 seen</div>
+      </div>
+    </div>
+
+    <div class="mastery-legend">
+      <div class="ml-item"><div class="ml-dot" style="background:rgba(15,14,12,0.08)"></div>Unseen</div>
+      <div class="ml-item"><div class="ml-dot" style="background:rgba(181,41,14,0.2)"></div>Learning (&lt;50%)</div>
+      <div class="ml-item"><div class="ml-dot" style="background:rgba(184,134,11,0.25)"></div>Familiar (50–79%)</div>
+      <div class="ml-item"><div class="ml-dot" style="background:rgba(30,107,60,0.18)"></div>Mastered (≥80%)</div>
+    </div>
+
+    <div class="stats-section-title">All characters</div>
+    <div class="mastery-grid" id="mastery-grid"></div>
+
+    <div class="stats-section-title">Most struggled words</div>
+    <div class="struggled-list" id="struggled-list"></div>
+
+    <button class="stats-reset-btn" id="stats-reset-btn">Reset all progress</button>
+  </div>
+
 </main>
 </div>
 
@@ -785,7 +901,7 @@ function shuffle(arr) {
 
 function startQuiz() {
   const pool = retryMode ? [...sessionWrong] : VOCAB.filter(w => cfg.levels.has(w.level));
-  questions = shuffle(pool).slice(0, cfg.count);
+  questions = retryMode ? shuffle(pool).slice(0, cfg.count) : weightedSample(pool, cfg.count);
   qIdx = 0; correct = 0; wrong = 0; curStreak = 0; bestStreak = 0;
   sessionWrong = []; sessionStart = Date.now(); answered = false;
   showPanel('quiz-panel');
@@ -982,6 +1098,8 @@ function recordAnswer(isCorrect, word) {
     wrong++; curStreak = 0;
     sessionWrong.push(word);
   }
+  // Persist to SRS (vocab only — sentences have no .chars)
+  if (quizType === 'vocab' && word.chars) srsUpdate(word.chars, isCorrect);
   updateHeaderStats();
 }
 
@@ -1459,6 +1577,185 @@ function showSentenceFeedback(isCorrect, sent, typedVal) {
 }
 
 // Start button — route to vocab or sentence quiz
+// ═══════════════════════════════════════════════════
+//  SRS MEMORY SYSTEM (vocab only, not sentences)
+// ═══════════════════════════════════════════════════
+const SRS_KEY = 'hsk_srs_v1';
+
+function srsLoad() {
+  try { return JSON.parse(localStorage.getItem(SRS_KEY)) || {}; }
+  catch { return {}; }
+}
+
+function srsSave(data) {
+  try { localStorage.setItem(SRS_KEY, JSON.stringify(data)); } catch {}
+}
+
+function srsGet(chars) {
+  const data = srsLoad();
+  return data[chars] || { correctStreak: 0, totalCorrect: 0, totalSeen: 0, lastSeen: 0 };
+}
+
+function srsUpdate(chars, isCorrect) {
+  const data = srsLoad();
+  const entry = data[chars] || { correctStreak: 0, totalCorrect: 0, totalSeen: 0, lastSeen: 0 };
+  entry.totalSeen++;
+  entry.lastSeen = Date.now();
+  if (isCorrect) {
+    entry.totalCorrect++;
+    entry.correctStreak++;
+  } else {
+    entry.correctStreak = 0;
+  }
+  data[chars] = entry;
+  srsSave(data);
+}
+
+function wordWeight(word) {
+  const entry = srsGet(word.chars);
+  if (entry.totalSeen === 0) return 10; // unseen words get high priority
+
+  // Time factor: weight recovers to 1.0 after 24 hours since last seen
+  const hoursSince = (Date.now() - entry.lastSeen) / 3600000;
+  const timeFactor = Math.min(hoursSince / 24, 1);
+
+  // Accuracy factor: worse accuracy = higher weight
+  const accuracy = entry.totalCorrect / entry.totalSeen;
+  const accuracyFactor = 1 - (accuracy * 0.8); // min 0.2 even for perfect words
+
+  // Streak factor: recent correct streaks reduce weight
+  const streakFactor = 1 / (1 + entry.correctStreak * 0.5);
+
+  // Combine: time brings weight back up, poor accuracy keeps it high
+  return Math.max(0.1, (accuracyFactor + streakFactor) * (0.3 + 0.7 * timeFactor));
+}
+
+function weightedSample(pool, count) {
+  if (pool.length <= count) return shuffle(pool);
+  const weights = pool.map(w => wordWeight(w));
+  const total = weights.reduce((a, b) => a + b, 0);
+  const selected = [];
+  const used = new Set();
+
+  while (selected.length < count && selected.length < pool.length) {
+    let r = Math.random() * total;
+    // Adjust for already-used items
+    let adj = 0;
+    used.forEach(i => { if (i <= pool.indexOf(pool[i])) adj += weights[i]; });
+
+    let cumulative = 0;
+    for (let i = 0; i < pool.length; i++) {
+      if (used.has(i)) continue;
+      cumulative += weights[i];
+      if (r <= cumulative) {
+        selected.push(pool[i]);
+        used.add(i);
+        break;
+      }
+    }
+    // Fallback if nothing selected (floating point edge case)
+    if (selected.length < used.size + 1) {
+      for (let i = 0; i < pool.length; i++) {
+        if (!used.has(i)) { selected.push(pool[i]); used.add(i); break; }
+      }
+    }
+  }
+  return selected;
+}
+
+// ═══════════════════════════════════════════════════
+//  STATS PANEL
+// ═══════════════════════════════════════════════════
+function masteryClass(entry) {
+  if (!entry || entry.totalSeen === 0) return 'unseen';
+  const acc = entry.totalCorrect / entry.totalSeen;
+  if (acc >= 0.8) return 'mastered';
+  if (acc >= 0.5) return 'familiar';
+  return 'learning';
+}
+
+function renderStatsPanel() {
+  showPanel('stats-panel');
+  const data = srsLoad();
+  const seen = Object.keys(data).filter(k => data[k].totalSeen > 0);
+
+  document.getElementById('stats-sub').textContent =
+    `${seen.length} of ${VOCAB.length} words studied`;
+
+  // Per-level stats
+  [1,2,3].forEach(lvl => {
+    const words = VOCAB.filter(w => w.level === lvl);
+    const seenWords = words.filter(w => data[w.chars]?.totalSeen > 0);
+    const masteredWords = words.filter(w => {
+      const e = data[w.chars];
+      return e && e.totalSeen > 0 && (e.totalCorrect / e.totalSeen) >= 0.8;
+    });
+    const pct = words.length > 0 ? Math.round(masteredWords.length / words.length * 100) : 0;
+    document.getElementById(`shc${lvl}-pct`).textContent = pct + '%';
+    document.getElementById(`shc${lvl}-bar`).style.width = pct + '%';
+    document.getElementById(`shc${lvl}-seen`).textContent = `${seenWords.length} / ${words.length} seen`;
+  });
+
+  // Mastery grid — all vocab words as coloured cells
+  const grid = document.getElementById('mastery-grid');
+  grid.innerHTML = '';
+  VOCAB.forEach(word => {
+    const entry = data[word.chars];
+    const cls = masteryClass(entry);
+    const cell = document.createElement('div');
+    cell.className = `mg-cell ${cls}`;
+    cell.textContent = word.chars;
+    // Tooltip-style title
+    const acc = entry?.totalSeen > 0
+      ? Math.round(entry.totalCorrect / entry.totalSeen * 100) + '%'
+      : 'unseen';
+    cell.title = `${word.chars} (${word.pinyin}) — ${acc}`;
+    grid.appendChild(cell);
+  });
+
+  // Struggled words — seen words sorted by worst accuracy, min 2 attempts
+  const struggled = VOCAB
+    .filter(w => data[w.chars]?.totalSeen >= 2)
+    .map(w => ({ word: w, entry: data[w.chars] }))
+    .sort((a, b) => {
+      const accA = a.entry.totalCorrect / a.entry.totalSeen;
+      const accB = b.entry.totalCorrect / b.entry.totalSeen;
+      return accA - accB;
+    })
+    .slice(0, 10);
+
+  const sl = document.getElementById('struggled-list');
+  sl.innerHTML = '';
+  if (struggled.length === 0) {
+    sl.innerHTML = '<p style="font-size:12px;color:var(--muted)">Complete at least 2 attempts on some words to see this.</p>';
+  } else {
+    struggled.forEach(({ word, entry }) => {
+      const acc = Math.round(entry.totalCorrect / entry.totalSeen * 100);
+      const row = document.createElement('div');
+      row.className = 'struggled-row';
+      const barColor = acc >= 80 ? 'var(--green)' : acc >= 50 ? 'var(--gold)' : 'var(--red)';
+      row.innerHTML = `
+        <span class="sr-char">${word.chars}</span>
+        <div class="sr-info">
+          <div class="sr-en">${word.english.split(';')[0].trim()}</div>
+          <div class="sr-py">${word.pinyin}</div>
+        </div>
+        <div class="sr-bar-wrap"><div class="sr-bar" style="width:${acc}%;background:${barColor}"></div></div>
+        <span class="sr-stat">${entry.totalCorrect}/${entry.totalSeen}</span>`;
+      sl.appendChild(row);
+    });
+  }
+}
+
+document.getElementById('open-stats-btn').addEventListener('click', renderStatsPanel);
+document.getElementById('stats-back-btn').addEventListener('click', () => showPanel('setup-panel'));
+document.getElementById('stats-reset-btn').addEventListener('click', () => {
+  if (confirm('Reset all progress? This cannot be undone.')) {
+    localStorage.removeItem(SRS_KEY);
+    renderStatsPanel();
+  }
+});
+
 // Start!
 loadVocab();
 loadSentences();
