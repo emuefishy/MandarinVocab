@@ -367,6 +367,38 @@ input[type=range]::-webkit-slider-thumb {
 }
 .streak-badge.show { transform: scale(1); }
 
+/* ── QUIZ TYPE SWITCHER ── */
+.quiz-type-row {
+  display: flex; gap: 12px; margin-bottom: 28px;
+}
+.qt-btn {
+  flex: 1; padding: 16px 12px;
+  border: 2px solid var(--border); border-radius: var(--r);
+  background: rgba(255,255,255,.4); cursor: pointer;
+  font-family: 'JetBrains Mono', monospace;
+  transition: all .15s;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+}
+.qt-btn:hover { border-color: var(--gold2); }
+.qt-btn.active { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+.qt-btn .qti { font-size: 24px; }
+.qt-btn .qtn { font-size: 13px; font-weight: 500; letter-spacing: .03em; }
+.qt-btn .qtd { font-size: 9px; opacity: .65; }
+
+/* Sentence card display */
+.q-main.sentence {
+  font-family: 'Noto Serif SC', serif;
+  font-size: clamp(22px, 4vw, 34px);
+  font-weight: 700; line-height: 1.5;
+  word-break: break-all;
+}
+.q-pinyin.sentence-pinyin {
+  font-family: 'Crimson Pro', serif;
+  font-size: 15px; font-style: italic;
+  color: var(--muted); line-height: 1.7;
+  word-break: break-word;
+}
+
 @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-8px)} 75%{transform:translateX(8px)} }
 .shake { animation: shake .22s ease; }
 
@@ -408,56 +440,106 @@ input[type=range]::-webkit-slider-thumb {
       <br><button class="file-pick-btn" id="file-pick-btn">📂 Choose hsk_1_2_3_vocabulary.csv</button>
     </div>
 
-    <div class="config-grid">
-      <div class="config-card span2">
-        <span class="cfg-label">HSK Level (select one or more)</span>
-        <div class="level-row">
-          <button class="lvl-btn active" data-level="1"><span class="ln">1</span><span class="lc" id="cnt1">…</span></button>
-          <button class="lvl-btn active" data-level="2"><span class="ln">2</span><span class="lc" id="cnt2">…</span></button>
-          <button class="lvl-btn active" data-level="3"><span class="ln">3</span><span class="lc" id="cnt3">…</span></button>
-        </div>
-      </div>
+    <!-- Quiz type switcher -->
+    <div class="quiz-type-row">
+      <button class="qt-btn active" data-qt="vocab">
+        <span class="qti">字</span>
+        <span class="qtn">Vocabulary</span>
+        <span class="qtd">Single characters & words</span>
+      </button>
+      <button class="qt-btn" data-qt="sentences">
+        <span class="qti">句</span>
+        <span class="qtn">Sentences</span>
+        <span class="qtd">Full sentence translation</span>
+      </button>
+    </div>
 
-      <div class="config-card">
-        <span class="cfg-label">Quiz Mode</span>
-        <div class="toggle-row">
-          <button class="tog-btn active" data-mode="mc">
-            <span class="ti">🎯</span><span class="tn">Multiple Choice</span><span class="td">Pick from 4 options</span>
-          </button>
-          <button class="tog-btn" data-mode="type">
-            <span class="ti">⌨️</span><span class="tn">Type Answer</span><span class="td">Type characters or English</span>
-          </button>
-          <button class="tog-btn" data-mode="draw">
-            <span class="ti">✏️</span><span class="tn">Draw</span><span class="td">Handwrite the character</span>
-          </button>
+    <!-- VOCAB CONFIG -->
+    <div id="vocab-config">
+      <div class="config-grid">
+        <div class="config-card span2">
+          <span class="cfg-label">HSK Level (select one or more)</span>
+          <div class="level-row">
+            <button class="lvl-btn active" data-level="1"><span class="ln">1</span><span class="lc" id="cnt1">…</span></button>
+            <button class="lvl-btn active" data-level="2"><span class="ln">2</span><span class="lc" id="cnt2">…</span></button>
+            <button class="lvl-btn active" data-level="3"><span class="ln">3</span><span class="lc" id="cnt3">…</span></button>
+          </div>
         </div>
-      </div>
 
-      <div class="config-card">
-        <span class="cfg-label">Question Direction</span>
-        <div class="toggle-row">
-          <button class="dir-btn active" data-dir="zh-en">🇨🇳 → 🇬🇧<br><small>Char → English</small></button>
-          <button class="dir-btn" data-dir="en-zh">🇬🇧 → 🇨🇳<br><small>English → Char</small></button>
-          <button class="dir-btn" data-dir="py-zh">pīn → 字<br><small>Pinyin → Char</small></button>
+        <div class="config-card">
+          <span class="cfg-label">Quiz Mode</span>
+          <div class="toggle-row">
+            <button class="tog-btn active" data-mode="mc">
+              <span class="ti">🎯</span><span class="tn">Multiple Choice</span><span class="td">Pick from 4 options</span>
+            </button>
+            <button class="tog-btn" data-mode="type">
+              <span class="ti">⌨️</span><span class="tn">Type Answer</span><span class="td">Type characters or English</span>
+            </button>
+            <button class="tog-btn" data-mode="draw">
+              <span class="ti">✏️</span><span class="tn">Draw</span><span class="td">Handwrite the character</span>
+            </button>
+          </div>
         </div>
-      </div>
 
-      <div class="config-card">
-        <span class="cfg-label">Pinyin Hint (zh→en mode)</span>
-        <div class="toggle-row">
-          <button class="tog-btn active" data-pinyin="show"><span class="ti">👁</span><span class="tn">Show</span><span class="td">Always visible</span></button>
-          <button class="tog-btn" data-pinyin="click"><span class="ti">🫣</span><span class="tn">On Tap</span><span class="td">Reveal on request</span></button>
-          <button class="tog-btn" data-pinyin="hide"><span class="ti">🙈</span><span class="tn">Hide</span><span class="td">No pinyin</span></button>
+        <div class="config-card">
+          <span class="cfg-label">Question Direction</span>
+          <div class="toggle-row">
+            <button class="dir-btn active" data-dir="zh-en">🇨🇳 → 🇬🇧<br><small>Char → English</small></button>
+            <button class="dir-btn" data-dir="en-zh">🇬🇧 → 🇨🇳<br><small>English → Char</small></button>
+            <button class="dir-btn" data-dir="py-zh">pīn → 字<br><small>Pinyin → Char</small></button>
+          </div>
         </div>
-      </div>
 
-      <div class="config-card">
-        <span class="cfg-label">Number of Questions</span>
-        <div class="slider-row">
-          <input type="range" id="q-slider" min="5" max="50" step="5" value="20">
-          <span class="slider-val" id="q-slider-val">20</span>
+        <div class="config-card">
+          <span class="cfg-label">Pinyin Hint (zh→en mode)</span>
+          <div class="toggle-row">
+            <button class="tog-btn active" data-pinyin="show"><span class="ti">👁</span><span class="tn">Show</span><span class="td">Always visible</span></button>
+            <button class="tog-btn" data-pinyin="click"><span class="ti">🫣</span><span class="tn">On Tap</span><span class="td">Reveal on request</span></button>
+            <button class="tog-btn" data-pinyin="hide"><span class="ti">🙈</span><span class="tn">Hide</span><span class="td">No pinyin</span></button>
+          </div>
+        </div>
+
+        <div class="config-card">
+          <span class="cfg-label">Number of Questions</span>
+          <div class="slider-row">
+            <input type="range" id="q-slider" min="5" max="50" step="5" value="20">
+            <span class="slider-val" id="q-slider-val">20</span>
+          </div>
         </div>
       </div>
+    </div>
+
+    <!-- SENTENCE CONFIG -->
+    <div id="sentence-config" style="display:none">
+      <div class="file-notice" id="sent-file-notice" style="display:none">
+        ⚠ Could not load sentences_clean.tsv. Please select it manually:
+        <br><button class="file-pick-btn" id="sent-file-pick-btn">📂 Choose sentences_clean.tsv</button>
+      </div>
+      <div class="config-grid">
+        <div class="config-card span2">
+          <span class="cfg-label">Sentence Mode</span>
+          <div class="toggle-row">
+            <button class="tog-btn active" data-smode="zh-en">
+              <span class="ti">📖</span>
+              <span class="tn">Sentence → English</span>
+              <span class="td">Translate the Chinese sentence</span>
+            </button>
+            <button class="tog-btn" data-smode="zh-py-en">
+              <span class="ti">🔤</span>
+              <span class="tn">Sentence + Pinyin → English</span>
+              <span class="td">Translate with pinyin shown</span>
+            </button>
+          </div>
+        </div>
+        <div class="config-card span2">
+          <span class="cfg-label">Number of Sentences</span>
+          <div class="slider-row">
+            <input type="range" id="sq-slider" min="5" max="30" step="5" value="10">
+            <span class="slider-val" id="sq-slider-val">10</span>
+          </div>
+        </div>
+      </div>
+      <p style="font-size:11px;color:var(--muted);margin-bottom:20px;" id="sent-count-label">Loading sentences…</p>
     </div>
 
     <button class="start-btn" id="start-btn" disabled>Begin Session →</button>
@@ -878,11 +960,14 @@ function submitType() {
   showFeedback(isCorrect, word, isCorrect ? null : val);
 }
 
-document.getElementById('check-btn').addEventListener('click', submitType);
+document.getElementById('check-btn').addEventListener('click', () => {
+  if (quizType === 'sentences') submitSentenceType();
+  else submitType();
+});
 document.getElementById('type-input').addEventListener('keydown', e => {
   if (e.key === 'Enter') {
     e.stopPropagation();
-    if (!answered) submitType();
+    if (!answered) { if (quizType === 'sentences') submitSentenceType(); else submitType(); }
     else advance();
   }
 });
@@ -912,7 +997,6 @@ function showFeedback(isCorrect, word, typedVal) {
   const allMeanings = word.english.split(';').map(m => m.trim()).join(', ');
 
   if (!isCorrect && typedVal) {
-    // Type mode wrong: show what they typed vs all correct answers
     document.getElementById('fb-msg').innerHTML =
       `<strong>${phrase}</strong> You typed: <span style="text-decoration:line-through;opacity:.7">${typedVal}</span><br>` +
       `✓ ${word.chars} = <em>${allMeanings}</em> <span style="opacity:.7">(${word.pinyin})</span>`;
@@ -939,7 +1023,8 @@ function advance() {
     document.getElementById('type-input').value = '';
     document.getElementById('type-input').className = 'type-input';
     initDrawCanvas();
-    renderQuestion();
+    if (quizType === 'sentences') renderSentenceQuestion();
+    else renderQuestion();
   }
 }
 
@@ -953,8 +1038,9 @@ function showResults() {
 
   document.getElementById('res-title').textContent =
     pct === 100 ? '完美！ Perfect!' : pct >= 80 ? 'Great work!' : pct >= 60 ? 'Keep practising!' : '加油！ Keep going!';
-  document.getElementById('res-sub').textContent =
-    `${questions.length} questions · HSK ${[...cfg.levels].sort().join('+')}`;
+  document.getElementById('res-sub').textContent = quizType === 'sentences'
+    ? `${questions.length} sentences · ${scfg.mode === 'zh-py-en' ? 'with pinyin' : 'no pinyin'}`
+    : `${questions.length} questions · HSK ${[...cfg.levels].sort().join('+')}`;
 
   setTimeout(() => {
     const circ = 414.7;
@@ -987,10 +1073,10 @@ function showResults() {
   }
 }
 
-document.getElementById('again-btn').addEventListener('click', () => { retryMode = false; startQuiz(); });
+document.getElementById('again-btn').addEventListener('click', () => { retryMode = false; quizType === 'sentences' ? startSentenceQuiz() : startQuiz(); });
 document.getElementById('retry-btn').addEventListener('click', () => { retryMode = true; startQuiz(); });
 document.getElementById('settings-btn').addEventListener('click', () => { retryMode = false; showPanel('setup-panel'); });
-document.getElementById('start-btn').addEventListener('click', () => { retryMode = false; startQuiz(); });
+document.getElementById('start-btn').addEventListener('click', () => { retryMode = false; quizType === 'sentences' ? startSentenceQuiz() : startQuiz(); });
 
 // ═══════════════════════════════════════════════════
 //  HEADER STATS & STREAK BADGE
@@ -1171,8 +1257,211 @@ function hideDrawPad() {
   document.getElementById('draw-wrap').style.display = 'none';
 }
 
+// ═══════════════════════════════════════════════════
+//  SENTENCES DATA & CONFIG
+// ═══════════════════════════════════════════════════
+let SENTENCES = [];
+const scfg = { mode: 'zh-en', count: 10 };
+let quizType = 'vocab'; // 'vocab' | 'sentences'
+
+function parseSentenceTSV(text) {
+  const lines = text.trim().split(/\r?\n/);
+  const result = [];
+  for (let i = 1; i < lines.length; i++) {
+    const cols = lines[i].split('\t');
+    if (cols.length < 3) continue;
+    const chinese = cols[0].trim();
+    const pinyin  = cols[1].trim();
+    const english = cols[2].trim();
+    if (chinese && pinyin && english) result.push({ chinese, pinyin, english });
+  }
+  return result;
+}
+
+async function loadSentences() {
+  const candidates = ['sentences_clean.tsv', 'sentences.tsv'];
+  for (const name of candidates) {
+    try {
+      const res = await fetch(name);
+      if (!res.ok) continue;
+      const text = await res.text();
+      const parsed = parseSentenceTSV(text);
+      if (parsed.length > 0) {
+        SENTENCES = parsed;
+        onSentencesLoaded();
+        return;
+      }
+    } catch (_) {}
+  }
+  document.getElementById('sent-file-notice').style.display = 'block';
+}
+
+function onSentencesLoaded() {
+  document.getElementById('sent-count-label').textContent =
+    `${SENTENCES.length} sentences loaded`;
+  if (quizType === 'sentences') document.getElementById('start-btn').disabled = false;
+}
+
+// Quiz type switcher
+document.querySelectorAll('[data-qt]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-qt]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    quizType = btn.dataset.qt;
+    document.getElementById('vocab-config').style.display    = quizType === 'vocab'     ? 'block' : 'none';
+    document.getElementById('sentence-config').style.display = quizType === 'sentences' ? 'block' : 'none';
+    // Update start button state
+    if (quizType === 'vocab')     document.getElementById('start-btn').disabled = VOCAB.length === 0;
+    if (quizType === 'sentences') document.getElementById('start-btn').disabled = SENTENCES.length === 0;
+  });
+});
+
+// Sentence mode buttons
+document.querySelectorAll('[data-smode]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-smode]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    scfg.mode = btn.dataset.smode;
+  });
+});
+
+// Sentence count slider
+const sqSlider = document.getElementById('sq-slider');
+sqSlider.addEventListener('input', () => {
+  scfg.count = parseInt(sqSlider.value);
+  document.getElementById('sq-slider-val').textContent = sqSlider.value;
+});
+
+// Manual sentence file picker
+document.getElementById('sent-file-pick-btn').addEventListener('click', () => {
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = '.tsv,.txt';
+  inp.onchange = async e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const text = await file.text();
+    const parsed = parseSentenceTSV(text);
+    if (parsed.length > 0) {
+      SENTENCES = parsed;
+      document.getElementById('sent-file-notice').style.display = 'none';
+      onSentencesLoaded();
+    } else {
+      alert('Could not parse file. Expected columns: Chinese\\tPinyin\\tEnglish');
+    }
+  };
+  inp.click();
+});
+
+// ═══════════════════════════════════════════════════
+//  SENTENCE QUIZ ENGINE
+// ═══════════════════════════════════════════════════
+function startSentenceQuiz() {
+  questions = shuffle(SENTENCES).slice(0, scfg.count);
+  qIdx = 0; correct = 0; wrong = 0; curStreak = 0; bestStreak = 0;
+  sessionWrong = []; sessionStart = Date.now(); answered = false;
+  showPanel('quiz-panel');
+  renderSentenceQuestion();
+}
+
+function renderSentenceQuestion() {
+  answered = false;
+  const sent  = questions[qIdx];
+  const total = questions.length;
+
+  document.getElementById('q-label').textContent = `${qIdx + 1} / ${total}`;
+  document.getElementById('prog').style.width = `${(qIdx / total) * 100}%`;
+
+  const mainEl   = document.getElementById('q-main');
+  const pinyinEl = document.getElementById('q-pinyin');
+  const ctxEl    = document.getElementById('q-ctx');
+  const hintBtn  = document.getElementById('hint-btn');
+
+  // Show Chinese sentence
+  mainEl.textContent = sent.chinese;
+  mainEl.className = 'q-main sentence';
+  ctxEl.textContent = 'Translate this sentence into English';
+
+  // Pinyin row
+  pinyinEl.className = 'q-pinyin sentence-pinyin';
+  if (scfg.mode === 'zh-py-en') {
+    pinyinEl.textContent = sent.pinyin;
+    pinyinEl.classList.remove('hidden');
+    hintBtn.style.display = 'none';
+  } else {
+    pinyinEl.textContent = sent.pinyin;
+    pinyinEl.classList.add('hidden');
+    hintBtn.style.display = 'inline';
+    hintBtn.textContent = '▸ show pinyin';
+  }
+
+  // Clear feedback, hide draw pad
+  const fb = document.getElementById('feedback');
+  fb.style.display = 'none'; fb.className = 'feedback';
+  hideDrawPad();
+  document.getElementById('choices-wrap').style.display = 'none';
+
+  // Always type mode for sentences
+  const typeWrap = document.getElementById('type-wrap');
+  typeWrap.style.display = 'flex';
+  const inp = document.getElementById('type-input');
+  inp.value = ''; inp.className = 'type-input';
+  inp.placeholder = 'type the English translation…';
+  setTimeout(() => inp.focus(), 50);
+}
+
+function submitSentenceType() {
+  if (answered) return;
+  const inp = document.getElementById('type-input');
+  const val = inp.value.trim();
+  if (!val) return;
+  answered = true;
+
+  const sent = questions[qIdx];
+  const isCorrect = isSentenceCorrect(val, sent.english);
+
+  inp.className = 'type-input ' + (isCorrect ? 'correct' : 'wrong');
+  if (!isCorrect) { inp.classList.add('shake'); setTimeout(() => inp.classList.remove('shake'), 300); }
+
+  recordAnswer(isCorrect, sent);
+  showSentenceFeedback(isCorrect, sent, isCorrect ? null : val);
+}
+
+function isSentenceCorrect(val, correct) {
+  // Normalise both and check word overlap (loose matching for sentences)
+  const norm = s => s.toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, ' ').trim();
+  const inputWords   = new Set(norm(val).split(' ').filter(w => w.length > 2));
+  const correctWords = new Set(norm(correct).split(' ').filter(w => w.length > 2));
+  if (correctWords.size === 0) return false;
+  let matches = 0;
+  inputWords.forEach(w => { if (correctWords.has(w)) matches++; });
+  // Accept if ≥60% of meaningful words match
+  return (matches / correctWords.size) >= 0.6;
+}
+
+function showSentenceFeedback(isCorrect, sent, typedVal) {
+  const fb = document.getElementById('feedback');
+  fb.style.display = 'flex';
+  fb.className = 'feedback ' + (isCorrect ? 'correct' : 'wrong');
+  document.getElementById('fb-icon').textContent = isCorrect ? '✓' : '✗';
+  const phrases = isCorrect
+    ? ['Good translation!', 'Nice!', 'Well done!', '正确！']
+    : ['Not quite.', 'Not this time.', 'Keep trying!'];
+  const phrase = phrases[Math.floor(Math.random() * phrases.length)];
+
+  if (!isCorrect && typedVal) {
+    document.getElementById('fb-msg').innerHTML =
+      `<strong>${phrase}</strong> You wrote: <span style="text-decoration:line-through;opacity:.7">${typedVal}</span><br>` +
+      `✓ <em>${sent.english}</em>`;
+  } else {
+    document.getElementById('fb-msg').innerHTML =
+      `<strong>${phrase}</strong> <em>${sent.english}</em>`;
+  }
+}
+
+// Start button — route to vocab or sentence quiz
 // Start!
 loadVocab();
+loadSentences();
 </script>
 </body>
 </html>
